@@ -2,7 +2,7 @@ cv.glmcmeOverlap <- function (xme, xcme, y, family = c("gaussian","binomial", "p
                               lambda.min.ratio = 1e-06, ngamma = 20,
                               max.gamma = 150, ntau = 20, max.tau = 0.5, tau.min.ratio = 0.001,
                               it.max = 250, it.max.cv = 25, type.measure=c("deviance","class","bic"),
-                              warm.str = c("lasso","adaptive_lasso","elastic","ncvreg","group_lasso","NULL"),penalty.factor=rep(1,2*ncol(xme)),
+                              warm.str = c("NULL","lasso","adaptive_lasso","elastic","ncvreg","group_lasso","All"),penalty.factor=rep(1,2*ncol(xme)),
                               screen_ind=F,str=F)
 {
   pme <- ncol(xme)
@@ -97,8 +97,10 @@ cv.glmcmeOverlap <- function (xme, xcme, y, family = c("gaussian","binomial", "p
     for(l in c(2*lasind-1,2*lasind)){
       act.vec[(K1[l]+1):K1[l+1]] <- 1
     }
-  }else if (warm.str == "NULL") {
+  } else if (warm.str == "All") {
     act.vec <- rep(1, ncol(X.latent))
+  } else if (warm.str == "NULL") {
+    act.vec <- rep(-1, ncol(X.latent))
   }
 
 

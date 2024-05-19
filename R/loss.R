@@ -24,17 +24,19 @@ loss <- function(fitobj,y,yhat,n,family,type.measure=c("deviance","class","bic")
     }
   }else if(type.measure=="bic"){
     val <- array(NA, dim = dim(yhat))
+    if(length(dim(yhat))==3){
+      sel <- aperm(array(rep(selmat*log(n)/n, times=dim(yhat)[1]), dim(yhat)[c(2,3,1)]),c(3,1,2))
+    } else if (length(dim(yhat))==2) {
+      sel <- t(array(rep(selmat*log(n)/n, times=dim(yhat)[1]), dim(yhat)[c(2,1)]))
+    }
     if (family=="gaussian") {
-      val <- (y-yhat)^2+
-        aperm(array(rep(selmat*log(n)/n, times=dim(yhat)[1]), dim(yhat)[c(2,3,1)]),c(3,1,2))
+      val <- (y-yhat)^2+sel
     } else if (family=="binomial") {
-      val <- -2*(y*log(yhat)+(1-y)*log(1-yhat))+
-        aperm(array(rep(selmat*log(n)/n, times=dim(yhat)[1]), dim(yhat)[c(2,3,1)]),c(3,1,2))
+      val <- -2*(y*log(yhat)+(1-y)*log(1-yhat))+sel
     }  else if (family=="poisson") {
       yly <- y*log(y)
       yly[y==0] <- 0
-      val <- 2*(yly - y + yhat - y*log(yhat))+
-        aperm(array(rep(selmat*log(n)/n, times=dim(yhat)[1]), dim(yhat)[c(2,3,1)]),c(3,1,2))
+      val <- 2*(yly - y + yhat - y*log(yhat))+sel
     }
     val <- replace(val, val == -Inf, 9999999)
   }
