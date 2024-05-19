@@ -8,7 +8,7 @@ Description: Provides functions for implementing cmenet - a bi-level variable se
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: FALSE
-Imports: Rcpp (>= 0.12.4), MASS, glmnet, hierNet, sparsenet
+Imports: Rcpp (>= 0.12.4), Matrix, MASS, caret, glmnet, ncvreg, hierNet, sparsenet
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 6.1.1
 NeedsCompilation: yes

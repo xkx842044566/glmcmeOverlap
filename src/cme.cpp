@@ -899,10 +899,10 @@ List cme_wls(NumericMatrix& XX, NumericVector& yy, CharacterVector& family,
         //Active set reset for it_warm iterations
         for (int m=0; m<it_warm; m++){
           if (lambda_it && screen_ind && a>0 && b>0){
-            chng_flag = coord_des_onerun_overlap(pme, nn, K1, lambda, cur_delta, chng_flag, tau, gamma, X, yy,
+            chng_flag = coord_des_onerun_wls(pme, nn, K1, lambda, cur_delta, chng_flag, tau, gamma, X, yy,
                                                  family, delta, scr, inter, beta, mg, eta, resid, W, dev);
           } else{
-            chng_flag = coord_des_onerun_overlap(pme, nn, K1, lambda, cur_delta, chng_flag, tau, gamma, X, yy,
+            chng_flag = coord_des_onerun_wls(pme, nn, K1, lambda, cur_delta, chng_flag, tau, gamma, X, yy,
                                                  family, delta, act, inter, beta, mg, eta, resid, W, dev);
           }
 
@@ -962,10 +962,10 @@ List cme_wls(NumericMatrix& XX, NumericVector& yy, CharacterVector& family,
           //Increment count and update flags
           it_inner ++;
           if (lambda_it && screen_ind && a>0 && b>0){
-            chng_flag = coord_des_onerun_overlap(pme, nn, K1, lambda, cur_delta, chng_flag, tau, gamma, X, yy,
+            chng_flag = coord_des_onerun_wls(pme, nn, K1, lambda, cur_delta, chng_flag, tau, gamma, X, yy,
                                                  family, delta, scr, inter, beta, mg, eta, resid, W, dev);
           } else {
-            chng_flag = coord_des_onerun_overlap(pme, nn, K1, lambda, cur_delta, chng_flag, tau, gamma, X, yy,
+            chng_flag = coord_des_onerun_wls(pme, nn, K1, lambda, cur_delta, chng_flag, tau, gamma, X, yy,
                                                  family, delta, act, inter, beta, mg, eta, resid, W, dev);
           }
 
@@ -1115,7 +1115,7 @@ List cme_gaussian(NumericMatrix& XX, NumericVector& yy,
   int it_max_reset = it_max / reset;
   bool cont = true;
   bool chng_flag = false;
-  double mu = 0;
+  //double mu = 0;
   int J = K1.size() - 1;
   int pme = J/2; //# of MEs
 
@@ -1166,7 +1166,7 @@ List cme_gaussian(NumericMatrix& XX, NumericVector& yy,
   //vector<bool> act_cme(pcme,true);
   vector<bool> scr(pp,true); //Screened active set
   //vector<bool> scr_cme(pcme,true);
-  bool kkt_bool;
+  //bool kkt_bool;
 
 
   //// Containers for linearized slopes Delta
@@ -1201,11 +1201,11 @@ List cme_gaussian(NumericMatrix& XX, NumericVector& yy,
 
 
   double inter= 0.0; //for intercept
-  double inprod = 0.0; //inner product
+  //double inprod = 0.0; //inner product
   double cj = 0.0;
   //double vj = 0.0;
   double thresh = 0.0; //threshold for screening
-  int size = 0;
+  //int size = 0;
   int num_act = 0;
   int num_scr = 0;
 
