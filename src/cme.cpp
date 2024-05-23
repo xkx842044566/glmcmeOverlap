@@ -216,6 +216,7 @@ bool coord_des_onerun_wls(int pme, int nn, NumericVector& K1,
                               vector<double>& eta, vector<double>& resid, vector<double>& W, double dev){
   bool chng_flag = false;
   double cur_beta = 0.0;
+  double cur_lambda = 0.0;
   double cur_inter = 0.0;
   double xwr = 0.0;
   double xwx = 0.0;
@@ -282,10 +283,11 @@ bool coord_des_onerun_wls(int pme, int nn, NumericVector& K1,
       inprod = xwr/((double)nn)+v*beta[K1[g]]; //checked to pod from update eqn (mod from above eqn)
 
       //int gind = floor((double)g/2.0);
-      cur_delta = delta[g]*mg[g];
+      cur_delta = delta[g];
+      cur_lambda = lambda*mg[g];
 
       //Perform ME thresholding
-      beta[K1[g]] = s_me(inprod,v,lambda,gamma,cur_delta);
+      beta[K1[g]] = s_me(inprod,v,cur_lambda,gamma,cur_delta);
 
       // Update eta, mu, weight and delta
       if (!dbleq(beta[K1[g]],cur_beta)){ // if beta changed...
@@ -307,8 +309,8 @@ bool coord_des_onerun_wls(int pme, int nn, NumericVector& K1,
         // v = xwx/((double)nn);
 
         //Update deltas
-        double offset = mcp(beta[K1[g]],lambda,gamma)-mcp(cur_beta,lambda,gamma); // new - old
-        delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+        double offset = mcp(beta[K1[g]],cur_lambda,gamma)-mcp(cur_beta,cur_lambda,gamma); // new - old
+        delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
         chng_flag = true;
       }
@@ -334,10 +336,11 @@ bool coord_des_onerun_wls(int pme, int nn, NumericVector& K1,
 
         //Update cur_delta
         //int gind = floor((double)g/2.0);
-        cur_delta = delta[g]*mg[g];
+        cur_delta = delta[g];
+        cur_lambda = lambda*mg[g];
 
         //Perform ME thresholding
-        beta[j] = s_me(inprod,v,lambda,gamma,cur_delta);
+        beta[j] = s_me(inprod,v,cur_lambda,gamma,cur_delta);
 
         // Update eta, mu, weight and delta
         if (!dbleq(beta[j],cur_beta)){ // if beta changed...
@@ -359,8 +362,8 @@ bool coord_des_onerun_wls(int pme, int nn, NumericVector& K1,
           // v = xwx/((double)nn);
 
           //Update deltas
-          double offset = mcp(beta[j],lambda,gamma)-mcp(cur_beta,lambda,gamma); // new - old
-          delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+          double offset = mcp(beta[j],cur_lambda,gamma)-mcp(cur_beta,cur_lambda,gamma); // new - old
+          delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
 
           //Update flag
@@ -396,14 +399,14 @@ bool coord_des_onerun_wls(int pme, int nn, NumericVector& K1,
               }
 
               //Update deltas and flag
-              double offset = mcp(beta[K1[g]],lambda,gamma)-mcp(cur_beta_me,lambda,gamma); // new - old (for me)
-              delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+              double offset = mcp(beta[K1[g]],cur_lambda,gamma)-mcp(cur_beta_me,cur_lambda,gamma); // new - old (for me)
+              delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
-              offset = mcp(beta[j],lambda,gamma)-mcp(cur_beta_cme1,lambda,gamma);
-              delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+              offset = mcp(beta[j],cur_lambda,gamma)-mcp(cur_beta_cme1,cur_lambda,gamma);
+              delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
-              offset = mcp(beta[j+1],lambda,gamma)-mcp(cur_beta_cme2,lambda,gamma); // new - old (for .|.-)
-              delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+              offset = mcp(beta[j+1],cur_lambda,gamma)-mcp(cur_beta_cme2,cur_lambda,gamma); // new - old (for .|.-)
+              delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
               //residuals shouldn't change
 
             }
@@ -431,14 +434,14 @@ bool coord_des_onerun_wls(int pme, int nn, NumericVector& K1,
               }
 
               //Update deltas and flag
-              double offset = mcp(beta[K1[g]],lambda,gamma)-mcp(cur_beta_me,lambda,gamma); // new - old (for me)
-              delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+              double offset = mcp(beta[K1[g]],cur_lambda,gamma)-mcp(cur_beta_me,cur_lambda,gamma); // new - old (for me)
+              delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
-              offset = mcp(beta[j],lambda,gamma)-mcp(cur_beta_cme1,lambda,gamma); // new - old (for .|.+)
-              delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+              offset = mcp(beta[j],cur_lambda,gamma)-mcp(cur_beta_cme1,cur_lambda,gamma); // new - old (for .|.+)
+              delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
-              offset = mcp(beta[j-1],lambda,gamma)-mcp(cur_beta_cme2,lambda,gamma);
-              delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+              offset = mcp(beta[j-1],cur_lambda,gamma)-mcp(cur_beta_cme2,cur_lambda,gamma);
+              delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
               //residuals shouldn't change
 
@@ -466,7 +469,7 @@ bool coord_des_onerun_gaussian(int pme, int nn, NumericVector& K1,
                                vector<double>& resid){
   bool chng_flag = false;
   double cur_beta = 0.0;
-  //double cur_inter = 0.0;
+  double cur_lambda = 0.0;
   double inprod = 0.0;
   int J = K1.size() - 1;
 
@@ -489,11 +492,12 @@ bool coord_des_onerun_gaussian(int pme, int nn, NumericVector& K1,
       inprod = inprod/((double)nn)+(((double)nn)-1)/((double)nn)*beta[K1[g]]; //checked to pod from update eqn (mod from above eqn)
 
       //int gind = floor((double)g/2.0);
-      cur_delta = delta[g]*mg[g];
+      cur_delta = delta[g];
+      cur_lambda = lambda*mg[g];
 
 
       //Perform ME thresholding
-      beta[K1[g]] = s_me_gaussian(inprod,lambda,gamma,cur_delta);
+      beta[K1[g]] = s_me_gaussian(inprod,cur_lambda,gamma,cur_delta);
 
       // Update eta, mu, weight and delta
       if (!dbleq(beta[K1[g]],cur_beta)){ // if beta changed...
@@ -504,8 +508,8 @@ bool coord_des_onerun_gaussian(int pme, int nn, NumericVector& K1,
         }
 
         //Update deltas
-        double offset = mcp(beta[K1[g]],lambda,gamma)-mcp(cur_beta,lambda,gamma); // new - old
-        delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+        double offset = mcp(beta[K1[g]],cur_lambda,gamma)-mcp(cur_beta,cur_lambda,gamma); // new - old
+        delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
         chng_flag = true;
       }
@@ -528,11 +532,12 @@ bool coord_des_onerun_gaussian(int pme, int nn, NumericVector& K1,
 
         //Update cur_delta
         //int gind = floor((double)g/2.0);
-        cur_delta = delta[g]*mg[g];
+        cur_delta = delta[g];
+        cur_lambda = lambda*mg[g];
 
 
         //Perform ME thresholding
-        beta[j] = s_me_gaussian(inprod,lambda,gamma,cur_delta);
+        beta[j] = s_me_gaussian(inprod,cur_lambda,gamma,cur_delta);
 
         // Update eta, mu, weight and delta
         if (!dbleq(beta[j],cur_beta)){ // if beta changed...
@@ -543,8 +548,8 @@ bool coord_des_onerun_gaussian(int pme, int nn, NumericVector& K1,
           }
 
           //Update deltas
-          double offset = mcp(beta[j],lambda,gamma)-mcp(cur_beta,lambda,gamma);
-          delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+          double offset = mcp(beta[j],cur_lambda,gamma)-mcp(cur_beta,cur_lambda,gamma);
+          delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
           //Update flag
           chng_flag = true;
@@ -579,14 +584,14 @@ bool coord_des_onerun_gaussian(int pme, int nn, NumericVector& K1,
               }
 
               //Update deltas and flag
-              double offset = mcp(beta[K1[g]],lambda,gamma)-mcp(cur_beta_me,lambda,gamma); // new - old (for me)
-              delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset));
+              double offset = mcp(beta[K1[g]],cur_lambda,gamma)-mcp(cur_beta_me,cur_lambda,gamma); // new - old (for me)
+              delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset));
 
-              offset = mcp(beta[j],lambda,gamma)-mcp(cur_beta_cme1,lambda,gamma);
-              delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+              offset = mcp(beta[j],cur_lambda,gamma)-mcp(cur_beta_cme1,cur_lambda,gamma);
+              delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
-              offset = mcp(beta[j+1],lambda,gamma)-mcp(cur_beta_cme2,lambda,gamma); // new - old (for .|.-)
-              delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+              offset = mcp(beta[j+1],cur_lambda,gamma)-mcp(cur_beta_cme2,cur_lambda,gamma); // new - old (for .|.-)
+              delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
               //residuals shouldn't change
 
             }
@@ -614,14 +619,14 @@ bool coord_des_onerun_gaussian(int pme, int nn, NumericVector& K1,
               }
 
               //Update deltas and flag
-              double offset = mcp(beta[K1[g]],lambda,gamma)-mcp(cur_beta_me,lambda,gamma); // new - old (for me)
-              delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+              double offset = mcp(beta[K1[g]],cur_lambda,gamma)-mcp(cur_beta_me,cur_lambda,gamma); // new - old (for me)
+              delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
-              offset = mcp(beta[j],lambda,gamma)-mcp(cur_beta_cme1,lambda,gamma); // new - old (for .|.+)
-              delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+              offset = mcp(beta[j],cur_lambda,gamma)-mcp(cur_beta_cme1,cur_lambda,gamma); // new - old (for .|.+)
+              delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
-              offset = mcp(beta[j-1],lambda,gamma)-mcp(cur_beta_cme2,lambda,gamma);
-              delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * offset)) ;
+              offset = mcp(beta[j-1],cur_lambda,gamma)-mcp(cur_beta_cme2,cur_lambda,gamma);
+              delta[g] = delta[g] * (exp(-(tau/cur_lambda) * offset)) ;
 
 
               //residuals shouldn't change
@@ -739,6 +744,7 @@ List cme_wls(NumericMatrix& XX, NumericVector& yy, CharacterVector& family,
   vector<double> delta(J); //Linearized penalty for siblings/cousins (sib(A), cou(A), sib(B), cou(B),...)
   double lambda; //Current penalties
   double cur_delta; //Current delta vector
+  double cur_lambda;
   double gamma;
   double tau;
   lambda = lambda_vec[0];
@@ -884,12 +890,14 @@ List cme_wls(NumericMatrix& XX, NumericVector& yy, CharacterVector& family,
       }
 
       //Recompute deltas
-      fill(delta.begin(),delta.end(),lambda); //assigns each element the value lambda
       for (int g=0; g<J; g++) {
+        cur_lambda = lambda*mg[g];
+        fill(delta.begin(),delta.end(),cur_lambda); //assigns each element the value lambda
+
         for (int j=K1[g];j<K1[g+1];j++){
 
           //int gind = floor((double)g/2.0); //index for sibling or cousin group
-          delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * mcp(beta[j],lambda,gamma) )) ;
+          delta[g] = delta[g] * (exp(-(tau/cur_lambda) * mcp(beta[j],cur_lambda,gamma) )) ;
         }
       }
 
@@ -930,6 +938,7 @@ List cme_wls(NumericMatrix& XX, NumericVector& yy, CharacterVector& family,
         if (lambda_it && screen_ind){
           if (a!= 0 && b!=0) {
             for (int g=0; g<J; g++) {
+              cur_lambda = lambda*mg[g];
               for (int j=K1[g];j<K1[g+1];j++){
 
                 if (scr[j]){
@@ -939,7 +948,7 @@ List cme_wls(NumericMatrix& XX, NumericVector& yy, CharacterVector& family,
 
                   //int gind = floor((double)g/2.0); //index for sibling group
 
-                  thresh = delta[g]+vj*gamma/(vj*gamma-delta[g]*mg[g]/lambda)*(lambda-lambda_vec[a-1]);
+                  thresh = delta[g]+vj*gamma/(vj*gamma-delta[g]/cur_lambda)*mg[g]*(lambda-lambda_vec[a-1]);
                   if (abs(cj) < thresh || !scr[K1[g]]) {
                     scr[j] = false;
                     num_scr --;
@@ -1185,6 +1194,7 @@ List cme_gaussian(NumericMatrix& XX, NumericVector& yy,
   vector<double> delta(J); //Linearized penalty for siblings (sib(A), sib(B), ...)
   double lambda; //Current penalties
   double cur_delta; //Current delta vector
+  double cur_lambda;
   double gamma;
   double tau;
   lambda = lambda_vec[0];
@@ -1273,10 +1283,15 @@ List cme_gaussian(NumericMatrix& XX, NumericVector& yy,
       }
 
       //Recompute deltas
-      fill(delta.begin(),delta.end(),lambda); //assigns each element the value lambda[0]
       for (int g=0; g<J; g++) {
-        //int gind = floor((double)g/2.0);
-        delta[g] = delta[g] * (exp(-(tau/lambda) * mg[g] * mcp(beta[K1[g]],lambda,gamma) )) ;
+
+        cur_lambda = lambda*mg[g];
+        fill(delta.begin(),delta.end(),cur_lambda); //assigns each element the value lambda
+
+        for (int j=K1[g];j<K1[g+1];j++){
+          //int gind = floor((double)g/2.0); //index for sibling or cousin group
+          delta[g] = delta[g] * (exp(-(tau/cur_lambda) * mcp(beta[j],cur_lambda,gamma) )) ;
+        }
       }
 
       //Coordinate descent with warm active set resets
@@ -1318,6 +1333,7 @@ List cme_gaussian(NumericMatrix& XX, NumericVector& yy,
         if (lambda_it && screen_ind){
           if (a!= 0 && b!=0) {
             for (int g=0; g<J; g++) {
+              cur_lambda = lambda*mg[g];
               for (int j=K1[g];j<K1[g+1];j++){
 
                 if (scr[j]){
@@ -1326,7 +1342,7 @@ List cme_gaussian(NumericMatrix& XX, NumericVector& yy,
 
                   //int gind = floor((double)g/2.0); //index for sibling group
 
-                  thresh = delta[g]+gamma/(gamma-delta[g]*mg[g]/lambda)*(lambda-lambda_vec[a-1]);
+                  thresh = delta[g]+gamma/(gamma-delta[g]/cur_lambda)*mg[g]*(lambda-lambda_vec[a-1]);
                   if (abs(cj) < thresh || !scr[K1[g]]) {
                     scr[j] = false;
                     num_scr --;
