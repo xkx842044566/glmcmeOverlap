@@ -890,14 +890,16 @@ List cme_wls(NumericMatrix& XX, NumericVector& yy, CharacterVector& family,
       }
 
       //Recompute deltas
+      fill(delta.begin(),delta.end(),lambda);
       for (int g=0; g<J; g++) {
         cur_lambda = lambda*mg[g];
-        fill(delta.begin(),delta.end(),cur_lambda); //assigns each element the value lambda
+        //fill(delta.begin(),delta.end(),cur_lambda); //assigns each element the value lambda
+        //delta[g] = cur_lambda;
 
         for (int j=K1[g];j<K1[g+1];j++){
 
           //int gind = floor((double)g/2.0); //index for sibling or cousin group
-          delta[g] = delta[g] * (exp(-(tau/cur_lambda) * mcp(beta[j],cur_lambda,gamma) )) ;
+          delta[g] = delta[g] * mg[g] * (exp(-(tau/cur_lambda) * mcp(beta[j],cur_lambda,gamma) )) ;
         }
       }
 
@@ -1283,14 +1285,15 @@ List cme_gaussian(NumericMatrix& XX, NumericVector& yy,
       }
 
       //Recompute deltas
+      fill(delta.begin(),delta.end(),lambda);
       for (int g=0; g<J; g++) {
 
         cur_lambda = lambda*mg[g];
-        fill(delta.begin(),delta.end(),cur_lambda); //assigns each element the value lambda
+         //assigns each element the value lambda
 
         for (int j=K1[g];j<K1[g+1];j++){
           //int gind = floor((double)g/2.0); //index for sibling or cousin group
-          delta[g] = delta[g] * (exp(-(tau/cur_lambda) * mcp(beta[j],cur_lambda,gamma) )) ;
+          delta[g] = delta[g] * mg[g] * (exp(-(tau/cur_lambda) * mcp(beta[j],cur_lambda,gamma) )) ;
         }
       }
 
